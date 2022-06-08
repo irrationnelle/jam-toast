@@ -1,28 +1,24 @@
 import React, {
   createContext,
-  CSSProperties,
-  ReactElement,
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState
 } from 'react';
 
 interface ShowToastOptions {
   name?: string,
-  duration?: number,
-  transitionAnimation?: string,
-  transitionDuration?: number,
-  renderToastBar?: React.Component,
-  shouldPile?: boolean,
-  pileDirection?: 'top' | 'bottom',
+  duration: number,
+  transitionDuration: number,
 }
 
-interface ToastContextProps  {
+interface ToastContextProps extends Required<Omit<ShowToastOptions, "name">> {
   message: string;
-  setMessage: (value: string) => void;
-  showToast: (message: string, options?: ShowToastOptions) => void;
+  showToast: (message: string, options?: Partial<ShowToastOptions>) => void;
+  shouldShow: boolean;
+  closeToast: () => void;
 }
 
 const ToastContext = createContext<ToastContextProps>(null as unknown as any);
@@ -31,61 +27,43 @@ interface ToastProviderProps {
   children: ReactNode;
 }
 
-const {Toast, show} = createToastMetaData();
-
-const createToastMetaData = () => {
-  return {
-    id: uuidv4(),
-    name: 'some title',
-    duration: '1000ms',
-    transitionAnimation: 'opacity',
-    transitionDuration: '1s',
-    message: "some message",
-    renderToastBar: React.Component,
-
-    // useToast 의존성을 가지는 컴포넌트들이 re-render 되는 것은 이번에는 안고 간다.
-    // 다수의 Toast 를 쌓을 때
-    shouldPile: true,
-    pileDirection: 'top' | 'bottom',
-
-    close: (target: {name: string, id: string}) => { console.log("close: ", target) },
-    show: (target: {name?: string, id?: string}) => { console.log("show: ", target) },
-    onClose: (ctx: any) => {
-      const handleContext  = (ctx: any) => { console.log(ctx) };
-      handleContext(ctx);
-    },
-    onShow: (ctx: any) => {
-      const handleContext  = (ctx: any) => { console.log(ctx) };
-      handleContext(ctx);
-    }
-  }
-}
-
 export const ToastProvider: React.FC<ToastProviderProps> = ({children}) => {
-  const [message, setMessage] = useState("");
-  const [toasts, setToasts] = useState();
-  const [toastComponent, setToastComponent] = useState<ReactElement>(React.createElement('div', null, ''));
-  const [toastMetaDatas, setToastMetaDatas] = useState<(Partial<ShowToastOptions> & {message: string})[]>([]);
+  const [shouldShow, setShouldShow] = useState(false);
+  const [toastMetaInfos, setToastMetaInfos] = useState<Omit<ShowToastOptions, "duration"> & {message: string}>(null as unknown as any);
+  const [duration, setDuration] = useState(-1);
 
-  const showToast = useCallback((message: string, options?: ShowToastOptions) => {
-    setMessage(message);
-    setToastMetaDatas((prev) => [...prev, {
-      name: options?.name ?? 'basic',
+  const showToast = useCallback((message: string, options?: Partial<ShowToastOptions>) => {
+    setToastMetaInfos({
       message: message,
-      transitionAnimation: options?.transitionAnimation ?? 'opacity',
-      transitionDuration: options?.transitionDuration ?? 500,
-      duration: options?.duration ?? 1000,
-      renderToastBar: options?.renderToastBar,
-      shouldPile: options?.shouldPile ?? true,
-      pileDirection: options?.pileDirection ?? 'bottom',
-    }])
+      transitionDuration: options?.transitionDuration ?? 400,
+    })
+    setDuration(options?.duration ?? -1)
+    setShouldShow(true);
   }, [])
 
+  const closeToast = useCallback(() => {
+    setShouldShow(false);
+  }, []);
+
+  useEffect(() => {
+    if(!shouldShow || duration === -1) return;
+
+    const timeout = setTimeout(() => {
+        setShouldShow(false)
+    }, duration)
+
+    return () => {
+      clearTimeout(timeout)
+    }
+  }, [duration, shouldShow])
+
   const value = useMemo(() => ({
-    message,
-    setMessage,
-    showToast
-  }), [message, setMessage, showToast])
+    showToast,
+    shouldShow,
+    closeToast,
+    duration,
+    ...toastMetaInfos
+  }), [showToast, shouldShow, closeToast, toastMetaInfos])
 
   return (
     <ToastContext.Provider value={value}>

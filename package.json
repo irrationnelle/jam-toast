@@ -1,22 +1,48 @@
 {
-  "name": "simple-toast",
+  "name": "jam-toast",
   "private": true,
-  "version": "0.0.0",
+  "description": "just toast",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": "irrationnelle <drakkarverenis@gmail.com>",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "nanobundle build",
     "preview": "vite preview"
   },
+  "type": "module",
+  "source": "./src/index.ts",
+  "main": "./src/index.ts",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./lib/index.cjs",
+      "import": "./lib/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "main": "./lib/index.mjs"
+  },
+  "files": [
+    "src",
+    "lib"
+  ],
   "dependencies": {
     "@vanilla-extract/css": "^1.7.1",
     "@vanilla-extract/vite-plugin": "^3.1.7",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react": "18.1.0",
+    "react-dom": "18.1.0",
+    "react-transition-group": "^4.4.2"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
+    "@types/react-transition-group": "^4.4.4",
     "@vitejs/plugin-react": "^1.3.0",
+    "nanobundle": "^0.0.28",
     "typescript": "^4.6.3",
     "vite": "^2.9.9"
   },

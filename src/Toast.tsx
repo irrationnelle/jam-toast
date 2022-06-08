@@ -1,17 +1,35 @@
-import React from 'react';
+import React, {ReactNode} from 'react';
 
-import { toast } from './Toast.css';
+import {toast, toastEnter, toastEnterActive, toastExit, toastExitActive} from './Toast.css';
 import ToastBar from './ToastBar';
 import ToastPortal from "./ToastPortal";
 import { useToast } from './ToastProvider';
+import { CSSTransition } from "react-transition-group";
 
-const Toast = () => {
-  const { message } = useToast();
+interface ToastProps {
+  children?: ReactNode
+}
+
+const Toast: React.FC<ToastProps> = ({children}: ToastProps) => {
+  const { message, shouldShow, transitionDuration } = useToast();
 
   return (
     <ToastPortal element="body">
       <div className={toast}>
-        <ToastBar  message={message}/>
+        <CSSTransition
+          in={shouldShow}
+          timeout={transitionDuration ?? 300}
+          classNames={{
+            enter: toastEnter,
+            enterActive: toastEnterActive,
+            exit: toastExit,
+            exitActive: toastExitActive
+          }}
+          mountOnEnter
+          unmountOnExit
+        >
+         {children ?? <ToastBar message={message}/>}
+        </CSSTransition>
       </div>
     </ToastPortal>
   );
